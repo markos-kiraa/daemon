@@ -28,6 +28,10 @@ out/
 *~
 .DS_Store
 
+# MCP
+.mcp.json
+.playwright-mcp/
+
 # Logs
 *.log
 npm-debug.log*
