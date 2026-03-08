@@ -127,6 +127,20 @@ body {
   animation: thinking 3s ease-in-out infinite;
 }
 
+/* Streaming word fade-in */
+@keyframes word-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.streaming-word {
+  animation: word-fade 150ms ease-out forwards;
+}
+
 /* Landing page staggered entrance */
 @keyframes landing-enter {
   from {

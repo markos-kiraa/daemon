@@ -66,10 +66,10 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
         nextIdRef.current++;
         queueIndexRef.current++;
 
-        // Calculate stream duration based on word count and type
-        const wordCount = (incoming.content.match(/\S+/g) || []).length;
-        const speed = incoming.type === "aphorism" ? 120 : 80;
-        const streamDuration = wordCount * speed;
+        // Estimate stream duration: character count × speed + punctuation overhead
+        const charCount = incoming.content.replace(/\n\n/g, "").length;
+        const speed = incoming.type === "aphorism" ? 35 : 20;
+        const streamDuration = Math.ceil(charCount * speed * 1.2);
 
         // 1. Fade out pulse (700ms transition)
         setPulseState("speaking");

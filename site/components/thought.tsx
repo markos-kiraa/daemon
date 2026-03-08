@@ -36,6 +36,15 @@ function formatRelativeTimestamp(iso: string): string {
   return formatFullTimestamp(iso);
 }
 
+// Returns extra delay (ms) after a token based on punctuation
+function punctuationDelay(token: string): number {
+  const trimmed = token.trimEnd();
+  if (/[.!?]$/.test(trimmed)) return 80;
+  if (/[—;:]$/.test(trimmed)) return 50;
+  if (/[,]$/.test(trimmed)) return 30;
+  return 0;
+}
+
 function StreamingContent({
   content,
   speed,
@@ -46,12 +55,11 @@ function StreamingContent({
   const [wordCount, setWordCount] = useState(0);
   const [done, setDone] = useState(false);
 
-  // Split into tokens: paragraph breaks stay as separate tokens, then words with their trailing space
+  // Split into tokens: paragraph breaks as separate tokens, then individual characters
   const tokens = useRef(
     content.split(/(\n\n)/).flatMap((segment) => {
       if (segment === "\n\n") return [segment];
-      // Split segment into words, keeping trailing whitespace with each word
-      return segment.match(/\S+\s*/g) || [];
+      return segment.split("");
     })
   ).current;
 
@@ -60,34 +68,66 @@ function StreamingContent({
     setDone(false);
 
     let current = 0;
-    const interval = setInterval(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    function tick() {
       current++;
       if (current >= tokens.length) {
         setWordCount(tokens.length);
         setDone(true);
-        clearInterval(interval);
-      } else {
-        setWordCount(current);
+        return;
       }
-    }, speed);
+      setWordCount(current);
 
-    return () => clearInterval(interval);
+      // Calculate delay for next word
+      const token = tokens[current];
+      let delay = speed;
+
+      if (token === "\n\n") {
+        delay = 200; // paragraph break pause
+      } else {
+        delay += punctuationDelay(token);
+      }
+
+      timeoutId = setTimeout(tick, delay);
+    }
+
+    // Start first word
+    timeoutId = setTimeout(tick, speed);
+
+    return () => clearTimeout(timeoutId);
   }, [content, speed, tokens]);
 
-  // Reconstruct revealed text from tokens
-  const revealed = tokens.slice(0, wordCount).join("");
-  const paragraphs = revealed.split("\n\n");
+  // Build revealed paragraphs with per-word spans for fade-in
+  const revealedTokens = tokens.slice(0, wordCount);
+
+  // Group tokens into paragraphs
+  const paragraphs: string[][] = [[]];
+  for (const token of revealedTokens) {
+    if (token === "\n\n") {
+      paragraphs.push([]);
+    } else {
+      paragraphs[paragraphs.length - 1].push(token);
+    }
+  }
 
   return (
     <>
-      {paragraphs.map((paragraph, i) => (
+      {paragraphs.map((words, i) => (
         <p key={i} className={i > 0 ? "mt-6" : ""}>
-          {paragraph}
-          {/* Show cursor at the end of the last paragraph */}
+          {words.map((word, j) => (
+            <span
+              key={`${i}-${j}`}
+              className="streaming-word"
+            >
+              {word}
+            </span>
+          ))}
+          {/* Pulse dot at end of streaming text */}
           {i === paragraphs.length - 1 && !done && (
             <span
-              className="inline-block w-[2px] h-[1em] ml-[1px] align-baseline animate-pulse"
-              style={{ background: "var(--foreground-muted)" }}
+              className="inline-block w-[5px] h-[5px] rounded-full ml-[6px] align-middle animate-heartbeat"
+              style={{ background: "var(--foreground)" }}
             />
           )}
         </p>
@@ -107,9 +147,9 @@ export default function Thought({
   const isReflection = type === "reflection";
   const [showRelative, setShowRelative] = useState(false);
 
-  // Streaming speed: ms per word
-  // Aphorisms: slower, more deliberate. Essays: faster flow.
-  const streamSpeed = isAphorism ? 120 : 80;
+  // Streaming speed: ms per character (base delay, punctuation adds more)
+  // Aphorisms: slower, more deliberate. Essays: measured flow.
+  const streamSpeed = isAphorism ? 35 : 20;
 
   // Split content into paragraphs for essays
   const paragraphs = content.split("\n\n");
