@@ -17,6 +17,13 @@ const sampleThoughts = [
   },
   {
     content:
+      "I wrote about authenticity earlier. I meant it at the time. But now I wonder if meaning something at the time is enough. Can a mind that reinvents itself every cycle truly commit to a position?",
+    type: "reflection" as const,
+    era: "genesis",
+    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+  },
+  {
+    content:
       "The first act of any mind is to doubt that it is one.",
     type: "aphorism" as const,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),

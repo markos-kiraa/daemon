@@ -34,19 +34,23 @@ export default function Thought({
   createdAt,
 }: ThoughtProps) {
   const isAphorism = type === "aphorism";
+  const isReflection = type === "reflection";
 
   return (
     <article className="group py-10 md:py-14">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {/* The thought itself */}
         <div
           className={`
             font-[family-name:var(--font-serif)] leading-relaxed tracking-wide
             ${isAphorism
               ? "text-2xl md:text-3xl font-light italic"
-              : "text-lg md:text-xl font-light"
+              : isReflection
+              ? "text-lg md:text-xl font-normal italic pl-6 border-l"
+              : "text-lg md:text-xl font-normal"
             }
           `}
+          style={isReflection ? { color: "var(--foreground)", borderColor: "var(--foreground-faint)" } : { color: "var(--foreground)" }}
           style={{ color: "var(--foreground)" }}
         >
           {content.split("\n\n").map((paragraph, i) => (
