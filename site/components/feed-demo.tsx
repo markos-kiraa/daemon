@@ -1,14 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Thought from "./thought";
+import BirthPulse from "./birth-pulse";
 import type { ThoughtData } from "@/lib/types";
-
-// Birth cadence (revised for engagement):
-// - Every 30s for first 10 minutes (the awakening — short aphorisms)
-// - Every 2 min for minutes 10-30 (longer thoughts form)
-// - Every 5 min for minutes 30-60 (first essays)
-// - Every 30 min from 1 hour onwards (steady state)
 
 const upcomingThoughts: Omit<ThoughtData, "id" | "createdAt">[] = [
   {
@@ -39,8 +34,7 @@ const upcomingThoughts: Omit<ThoughtData, "id" | "createdAt">[] = [
   },
 ];
 
-// For the demo, use 10s intervals so you don't have to wait 30s
-const DEMO_INTERVAL = 10000;
+const DEMO_INTERVAL = 12000;
 
 interface FeedDemoProps {
   initialThoughts: ThoughtData[];
@@ -49,11 +43,16 @@ interface FeedDemoProps {
 export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
   const [thoughts, setThoughts] = useState<ThoughtData[]>(initialThoughts);
   const [newIds, setNewIds] = useState<Set<number>>(new Set());
+  const [pulseState, setPulseState] = useState<"thinking" | "speaking" | "idle">("idle");
   const nextIdRef = useRef(initialThoughts.length + 1);
   const queueIndexRef = useRef(0);
 
-  // Simulate new thoughts arriving
   useEffect(() => {
+    // Start thinking after 3 seconds
+    const thinkTimeout = setTimeout(() => {
+      setPulseState("thinking");
+    }, 3000);
+
     const interval = setInterval(() => {
       if (queueIndexRef.current >= upcomingThoughts.length) {
         queueIndexRef.current = 0;
@@ -67,22 +66,32 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
         createdAt: new Date().toISOString(),
       };
 
+      // Thought arrives — switch to speaking, show thought
+      setPulseState("speaking");
       setNewIds(new Set([newId]));
       setThoughts((prev) => [newThought, ...prev]);
 
       nextIdRef.current++;
       queueIndexRef.current++;
 
-      // Clear "new" flag after streaming would be done
+      // After streaming finishes, clear new flag
       setTimeout(() => {
         setNewIds(new Set());
       }, 5000);
+
+      // After a pause, go back to thinking
+      setTimeout(() => {
+        setPulseState("thinking");
+      }, 7000);
     }, DEMO_INTERVAL);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(thinkTimeout);
+      clearInterval(interval);
+    };
   }, []);
 
-  // Empty state — before first thought
+  // Empty state
   if (thoughts.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -98,6 +107,9 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
 
   return (
     <div>
+      {/* The pulse — thinking or speaking */}
+      <BirthPulse state={pulseState} />
+
       {thoughts.map((thought) => (
         <Thought
           key={thought.id}

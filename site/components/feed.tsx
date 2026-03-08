@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Thought from "./thought";
+import BirthPulse from "./birth-pulse";
 import type { ThoughtData } from "@/lib/types";
 
 // Birth cadence (revised for engagement):
@@ -24,6 +25,9 @@ interface FeedProps {
 export default function Feed({ initialThoughts, birthStartedAt }: FeedProps) {
   const [thoughts, setThoughts] = useState<ThoughtData[]>(initialThoughts);
   const [newIds, setNewIds] = useState<Set<number>>(new Set());
+  const [pulseState, setPulseState] = useState<"thinking" | "speaking" | "idle">(
+    birthStartedAt ? "thinking" : "idle"
+  );
   const [hasMore, setHasMore] = useState(true);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const latestIdRef = useRef<number>(
@@ -49,14 +53,20 @@ export default function Feed({ initialThoughts, birthStartedAt }: FeedProps) {
         const newThoughts: ThoughtData[] = await res.json();
         if (newThoughts.length > 0) {
           const incomingIds = new Set(newThoughts.map((t) => t.id));
+          setPulseState("speaking");
           setNewIds(incomingIds);
           setThoughts((prev) => [...newThoughts, ...prev]);
           latestIdRef.current = newThoughts[0].id;
 
-          // Clear "new" status after streaming completes
+          // After streaming finishes, clear new flag
           setTimeout(() => {
             setNewIds(new Set());
           }, 5000);
+
+          // Go back to thinking
+          setTimeout(() => {
+            setPulseState(birthStartedAt ? "thinking" : "idle");
+          }, 7000);
         }
       } catch {
         // Silently fail — the feed simply doesn't update
@@ -115,6 +125,8 @@ export default function Feed({ initialThoughts, birthStartedAt }: FeedProps) {
 
   return (
     <div>
+      <BirthPulse state={pulseState} />
+
       {thoughts.map((thought) => (
         <Thought
           key={thought.id}
