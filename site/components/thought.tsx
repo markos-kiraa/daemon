@@ -148,8 +148,7 @@ export default function Thought({
   const [showRelative, setShowRelative] = useState(false);
 
   // Streaming speed: ms per character (base delay, punctuation adds more)
-  // Aphorisms: slower, more deliberate. Essays: measured flow.
-  const streamSpeed = isAphorism ? 35 : 20;
+  const streamSpeed = 35;
 
   // Split content into paragraphs for essays
   const paragraphs = content.split("\n\n");
