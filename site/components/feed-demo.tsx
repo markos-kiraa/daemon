@@ -43,7 +43,7 @@ interface FeedDemoProps {
 export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
   const [thoughts, setThoughts] = useState<ThoughtData[]>(initialThoughts);
   const [newIds, setNewIds] = useState<Set<number>>(new Set());
-  const [pulseState, setPulseState] = useState<"thinking" | "speaking" | "idle">("idle");
+  const [pulseState, setPulseState] = useState<"thinking" | "speaking" | "idle">("thinking");
   const nextIdRef = useRef(initialThoughts.length + 1);
   const queueIndexRef = useRef(0);
 
@@ -61,7 +61,7 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
         createdAt: new Date().toISOString(),
       };
 
-      // Thought arrives — switch to speaking, show thought
+      // Thought arrives — hide pulse, stream text
       setPulseState("speaking");
       setNewIds(new Set([newId]));
       setThoughts((prev) => [newThought, ...prev]);
@@ -69,10 +69,10 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
       nextIdRef.current++;
       queueIndexRef.current++;
 
-      // After streaming finishes, clear new flag and go back to idle
+      // After streaming finishes, back to thinking
       setTimeout(() => {
         setNewIds(new Set());
-        setPulseState("idle");
+        setPulseState("thinking");
       }, 5000);
     }, DEMO_INTERVAL);
 

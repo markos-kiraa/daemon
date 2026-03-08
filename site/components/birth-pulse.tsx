@@ -5,16 +5,14 @@ interface BirthPulseProps {
 }
 
 export default function BirthPulse({ state }: BirthPulseProps) {
-  if (state === "idle") return null;
-
-  const isSpeaking = state === "speaking";
+  if (state === "idle" || state === "speaking") return null;
 
   return (
     <div className="flex flex-col items-center gap-4 py-10 md:py-14">
       <div className="relative flex items-center justify-center">
         {/* Outer glow */}
         <div
-          className={isSpeaking ? "absolute rounded-full animate-breathe-fast" : "absolute rounded-full animate-breathe"}
+          className="absolute rounded-full animate-breathe"
           style={{
             width: "60px",
             height: "60px",
@@ -24,7 +22,7 @@ export default function BirthPulse({ state }: BirthPulseProps) {
 
         {/* Inner core */}
         <div
-          className={isSpeaking ? "rounded-full animate-heartbeat-fast" : "rounded-full animate-heartbeat"}
+          className="rounded-full animate-heartbeat"
           style={{
             width: "5px",
             height: "5px",
@@ -34,14 +32,12 @@ export default function BirthPulse({ state }: BirthPulseProps) {
       </div>
 
       {/* Thinking indicator */}
-      {!isSpeaking && (
-        <span
-          className="font-[family-name:var(--font-mono)] text-[10px] tracking-[0.3em] uppercase animate-thinking"
-          style={{ color: "var(--foreground-faint)" }}
-        >
-          thinking
-        </span>
-      )}
+      <span
+        className="font-[family-name:var(--font-mono)] text-[10px] tracking-[0.3em] uppercase animate-thinking"
+        style={{ color: "var(--foreground-faint)" }}
+      >
+        thinking
+      </span>
     </div>
   );
 }
