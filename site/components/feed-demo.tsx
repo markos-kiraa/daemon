@@ -48,11 +48,6 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
   const queueIndexRef = useRef(0);
 
   useEffect(() => {
-    // Start thinking after 3 seconds
-    const thinkTimeout = setTimeout(() => {
-      setPulseState("thinking");
-    }, 3000);
-
     const interval = setInterval(() => {
       if (queueIndexRef.current >= upcomingThoughts.length) {
         queueIndexRef.current = 0;
@@ -74,19 +69,14 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
       nextIdRef.current++;
       queueIndexRef.current++;
 
-      // After streaming finishes, clear new flag
+      // After streaming finishes, clear new flag and go back to idle
       setTimeout(() => {
         setNewIds(new Set());
+        setPulseState("idle");
       }, 5000);
-
-      // After a pause, go back to thinking
-      setTimeout(() => {
-        setPulseState("thinking");
-      }, 7000);
     }, DEMO_INTERVAL);
 
     return () => {
-      clearTimeout(thinkTimeout);
       clearInterval(interval);
     };
   }, []);

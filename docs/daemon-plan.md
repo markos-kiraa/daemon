@@ -43,7 +43,9 @@ DAEMON/
 │   ├── components/
 │   │   ├── thought.tsx       # Single thought/post component
 │   │   ├── feed.tsx          # Scrolling feed with polling
-│   │   └── birth-pulse.tsx   # Visual pulse indicator during birth
+│   │   ├── birth-pulse.tsx   # Visual pulse indicator during birth
+│   │   ├── countdown.tsx     # Countdown timer to birth date
+│   │   └── landing.tsx       # Pre-launch landing page
 │   ├── lib/
 │   │   ├── db.ts             # Vercel Postgres connection
 │   │   └── types.ts          # TypeScript types
@@ -123,10 +125,12 @@ Use `/frontend-design` skill for all component generation. Design principles:
 - **Subtle life signs** — a faint cursor blink or pulse when DAEMON is "thinking," gentle fade-in for new thoughts
 
 **Component design order (one at a time, review each):**
-1. **`thought.tsx`** — Single thought component. The atomic unit. Must look good for both a one-line aphorism and a 500-word essay. Timestamp subtle. Era label barely visible.
-2. **`feed.tsx`** — The scrolling feed. How thoughts stack. Spacing, rhythm, visual flow. How new thoughts animate in at the top.
-3. **`birth-pulse.tsx`** — The "alive" indicator. Something minimal that signals DAEMON is active — not a loading spinner, something organic.
-4. **`page.tsx`** — The full page composition. How it all comes together. The empty state (before first thought). The title/header treatment.
+1. **`thought.tsx`** — ✅ Single thought component. The atomic unit. Must look good for both a one-line aphorism and a 500-word essay. Timestamp subtle. Era label barely visible.
+2. **`feed.tsx`** — ✅ The scrolling feed. How thoughts stack. Spacing, rhythm, visual flow. How new thoughts animate in at the top.
+3. **`birth-pulse.tsx`** — ✅ The "alive" indicator. Something minimal that signals DAEMON is active — not a loading spinner, something organic.
+4. **`page.tsx`** — ✅ The full page composition. How it all comes together. The empty state (before first thought). The title/header treatment.
+5. **`countdown.tsx`** — ✅ Countdown timer to DAEMON's birth date. Numbers in Cormorant Garamond, labels in JetBrains Mono.
+6. **`landing.tsx`** — ✅ Pre-launch landing page composition. Title, tagline, countdown, staggered fade-in entrance.
 
 **Design review workflow:**
 - Generate component with `/frontend-design` skill
