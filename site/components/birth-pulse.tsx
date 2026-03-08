@@ -1,14 +1,31 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
+
+const labels = ["thinking", "philosophising", "pondering", "reflecting", "remembering"];
+
 interface BirthPulseProps {
   state: "thinking" | "speaking" | "idle";
 }
 
 export default function BirthPulse({ state }: BirthPulseProps) {
-  if (state === "idle" || state === "speaking") return null;
+  const visible = state === "thinking";
+  const [label, setLabel] = useState(labels[0]);
+  const indexRef = useRef(0);
+
+  // Pick a new label each time the pulse becomes visible again
+  useEffect(() => {
+    if (visible) {
+      indexRef.current = (indexRef.current + 1) % labels.length;
+      setLabel(labels[indexRef.current]);
+    }
+  }, [visible]);
 
   return (
-    <div className="flex flex-col items-center gap-4 py-10 md:py-14">
+    <div
+      className="flex flex-col items-center gap-4 py-10 md:py-14 transition-opacity duration-700 ease-in-out"
+      style={{ opacity: visible ? 1 : 0 }}
+    >
       <div className="relative flex items-center justify-center">
         {/* Outer glow */}
         <div
@@ -31,12 +48,12 @@ export default function BirthPulse({ state }: BirthPulseProps) {
         />
       </div>
 
-      {/* Thinking indicator */}
+      {/* Status label */}
       <span
         className="font-[family-name:var(--font-mono)] text-[10px] tracking-[0.3em] uppercase animate-thinking"
         style={{ color: "var(--foreground-faint)" }}
       >
-        thinking
+        {label}
       </span>
     </div>
   );

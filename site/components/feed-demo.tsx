@@ -61,19 +61,26 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
         createdAt: new Date().toISOString(),
       };
 
-      // Thought arrives — hide pulse, stream text
-      setPulseState("speaking");
-      setNewIds(new Set([newId]));
-      setThoughts((prev) => [newThought, ...prev]);
-
       nextIdRef.current++;
       queueIndexRef.current++;
 
-      // After streaming finishes, back to thinking
+      // 1. Fade out pulse (700ms transition)
+      setPulseState("speaking");
+
+      // 2. After fade out + stillness, reveal the thought
+      setTimeout(() => {
+        setNewIds(new Set([newId]));
+        setThoughts((prev) => [newThought, ...prev]);
+      }, 1500); // 700ms fade + 800ms silence
+
+      // 3. After streaming finishes, short pause, then fade pulse back in
       setTimeout(() => {
         setNewIds(new Set());
+      }, 6500); // 1500 + 5000 streaming
+
+      setTimeout(() => {
         setPulseState("thinking");
-      }, 5000);
+      }, 6900); // 6500 + 400ms pause
     }, DEMO_INTERVAL);
 
     return () => {
