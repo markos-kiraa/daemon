@@ -43,30 +43,39 @@ function StreamingContent({
   content: string;
   speed: number;
 }) {
-  const [charCount, setCharCount] = useState(0);
+  const [wordCount, setWordCount] = useState(0);
   const [done, setDone] = useState(false);
 
+  // Split into tokens: paragraph breaks stay as separate tokens, then words with their trailing space
+  const tokens = useRef(
+    content.split(/(\n\n)/).flatMap((segment) => {
+      if (segment === "\n\n") return [segment];
+      // Split segment into words, keeping trailing whitespace with each word
+      return segment.match(/\S+\s*/g) || [];
+    })
+  ).current;
+
   useEffect(() => {
-    setCharCount(0);
+    setWordCount(0);
     setDone(false);
 
     let current = 0;
     const interval = setInterval(() => {
       current++;
-      if (current >= content.length) {
-        setCharCount(content.length);
+      if (current >= tokens.length) {
+        setWordCount(tokens.length);
         setDone(true);
         clearInterval(interval);
       } else {
-        setCharCount(current);
+        setWordCount(current);
       }
     }, speed);
 
     return () => clearInterval(interval);
-  }, [content, speed]);
+  }, [content, speed, tokens]);
 
-  // Split the revealed text into paragraphs based on the original structure
-  const revealed = content.slice(0, charCount);
+  // Reconstruct revealed text from tokens
+  const revealed = tokens.slice(0, wordCount).join("");
   const paragraphs = revealed.split("\n\n");
 
   return (
@@ -98,9 +107,9 @@ export default function Thought({
   const isReflection = type === "reflection";
   const [showRelative, setShowRelative] = useState(false);
 
-  // Streaming speed: characters per interval
-  // Aphorisms: ~2-3 seconds total, Essays: ~15ms per char
-  const streamSpeed = isAphorism ? 35 : 15;
+  // Streaming speed: ms per word
+  // Aphorisms: slower, more deliberate. Essays: faster flow.
+  const streamSpeed = isAphorism ? 120 : 80;
 
   // Split content into paragraphs for essays
   const paragraphs = content.split("\n\n");

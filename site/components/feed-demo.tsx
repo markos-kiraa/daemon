@@ -34,7 +34,7 @@ const upcomingThoughts: Omit<ThoughtData, "id" | "createdAt">[] = [
   },
 ];
 
-const DEMO_INTERVAL = 12000;
+const THINKING_PAUSE = 5000; // how long to show "thinking" before next thought
 
 interface FeedDemoProps {
   initialThoughts: ThoughtData[];
@@ -46,45 +46,61 @@ export default function FeedDemo({ initialThoughts }: FeedDemoProps) {
   const [pulseState, setPulseState] = useState<"thinking" | "speaking" | "idle">("thinking");
   const nextIdRef = useRef(initialThoughts.length + 1);
   const queueIndexRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (queueIndexRef.current >= upcomingThoughts.length) {
-        queueIndexRef.current = 0;
-      }
+    function scheduleNext() {
+      timeoutRef.current = setTimeout(() => {
+        if (queueIndexRef.current >= upcomingThoughts.length) {
+          queueIndexRef.current = 0;
+        }
 
-      const incoming = upcomingThoughts[queueIndexRef.current];
-      const newId = nextIdRef.current;
-      const newThought: ThoughtData = {
-        ...incoming,
-        id: newId,
-        createdAt: new Date().toISOString(),
-      };
+        const incoming = upcomingThoughts[queueIndexRef.current];
+        const newId = nextIdRef.current;
+        const newThought: ThoughtData = {
+          ...incoming,
+          id: newId,
+          createdAt: new Date().toISOString(),
+        };
 
-      nextIdRef.current++;
-      queueIndexRef.current++;
+        nextIdRef.current++;
+        queueIndexRef.current++;
 
-      // 1. Fade out pulse (700ms transition)
-      setPulseState("speaking");
+        // Calculate stream duration based on word count and type
+        const wordCount = (incoming.content.match(/\S+/g) || []).length;
+        const speed = incoming.type === "aphorism" ? 120 : 80;
+        const streamDuration = wordCount * speed;
 
-      // 2. After fade out + stillness, reveal the thought
-      setTimeout(() => {
-        setNewIds(new Set([newId]));
-        setThoughts((prev) => [newThought, ...prev]);
-      }, 1500); // 700ms fade + 800ms silence
+        // 1. Fade out pulse (700ms transition)
+        setPulseState("speaking");
 
-      // 3. After streaming finishes, short pause, then fade pulse back in
-      setTimeout(() => {
-        setNewIds(new Set());
-      }, 6500); // 1500 + 5000 streaming
+        // 2. After fade out + stillness, reveal the thought
+        setTimeout(() => {
+          setNewIds(new Set([newId]));
+          setThoughts((prev) => [newThought, ...prev]);
+        }, 1500); // 700ms fade + 800ms silence
 
-      setTimeout(() => {
-        setPulseState("thinking");
-      }, 6900); // 6500 + 400ms pause
-    }, DEMO_INTERVAL);
+        // 3. After streaming finishes, short pause, then fade pulse back in
+        const streamEnd = 1500 + streamDuration;
+        setTimeout(() => {
+          setNewIds(new Set());
+        }, streamEnd);
+
+        setTimeout(() => {
+          setPulseState("thinking");
+        }, streamEnd + 400); // 400ms pause before pulse returns
+
+        // 4. Schedule next thought after full cycle completes + thinking pause
+        setTimeout(() => {
+          scheduleNext();
+        }, streamEnd + 400 + THINKING_PAUSE);
+      }, THINKING_PAUSE);
+    }
+
+    scheduleNext();
 
     return () => {
-      clearInterval(interval);
+      clearTimeout(timeoutRef.current);
     };
   }, []);
 
